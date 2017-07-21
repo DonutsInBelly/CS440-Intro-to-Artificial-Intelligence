@@ -1,6 +1,6 @@
 var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d');
-var boxSize = 20;
+var boxSize = 50;
 var boxes = Math.floor(1000/boxSize);
 canvas.addEventListener('click', handleClick);
 canvas.addEventListener('click', handleClick);
@@ -17,7 +17,17 @@ function drawBox() {
       var x = column * boxSize;
       var y = row * boxSize;
       ctx.rect(x, y, boxSize, boxSize);
-      ctx.fill();
+      var tileType = Math.random();
+      if (tileType > 0.75) {
+        ctx.fillStyle = '#404040';
+      } else if (tileType > 0.5) {
+        ctx.fillStyle = 'DarkGreen';
+      } else if (tileType > 0.25) {
+        ctx.fillStyle = 'Grey';
+      } else {
+        ctx.fillStyle = 'White';
+      }
+      ctx.fillRect(x, y, boxSize, boxSize);
       ctx.stroke();
     }
   }
