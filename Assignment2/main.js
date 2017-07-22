@@ -1,7 +1,8 @@
 var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d');
-var boxSize = 50;
-var boxes = Math.floor(1000/boxSize);
+var boxSize = 20;
+var boxes = 50;
+//var boxes = Math.floor(1000/boxSize);
 canvas.addEventListener('click', handleClick);
 canvas.addEventListener('click', handleClick);
 //ctx.fillStyle = 'green';
