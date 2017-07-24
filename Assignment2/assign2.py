@@ -3,7 +3,7 @@ import random
 import pygame
 
 cell_size = 100
-num_cells = 3
+num_cells = 5
 # num_x_cells = 0
 # num_y_cells= 0
 
