@@ -27,7 +27,7 @@ class Board(object):
                 self.cells[(x, y)] = {'state': None,     # None, Flat, Hilly, Forest, or Caves
                                      'prob': None,      # Probability
                                      'is_goal': False,  # Weather or not it is the goal node
-                                     'parent': None}    # Keep track of path
+                                     'chance_of_goal': None}    # Keep track of path
         # Sets probabilities for each cell in the board
         for x in range(width):
             for y in range(height):
@@ -72,17 +72,16 @@ class Board(object):
             for y in range(self.height):
                 top = (x * cell_size) + 2
                 left = (y * cell_size) + 2
-                if self.cells[(x, y)]['state'] == 'Flat':
-                    r = pygame.Rect(left, top, cell_size - 2, cell_size - 2)
+                r = pygame.Rect(left, top, cell_size - 2, cell_size - 2)
+                if self.cells[(x, y)]['is_goal']:
+                    pygame.draw.rect(self.background, red, r, 0)
+                elif self.cells[(x, y)]['state'] == 'Flat':
                     pygame.draw.rect(self.background, light_gray, r, 0)
                 elif self.cells[(x, y)]['state'] == 'Hilly':
-                    r = pygame.Rect(left, top, cell_size - 2, cell_size - 2)
                     pygame.draw.rect(self.background, light_green, r, 0)
                 elif self.cells[(x, y)]['state'] == 'Forest':
-                    r = pygame.Rect(left, top, cell_size - 2, cell_size - 2)
                     pygame.draw.rect(self.background, dark_green, r, 0)
                 elif self.cells[(x, y)]['state'] == 'Caves':
-                    r = pygame.Rect(left, top, cell_size - 2, cell_size - 2)
                     pygame.draw.rect(self.background, gray, r, 0)
 
 
