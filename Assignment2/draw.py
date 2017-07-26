@@ -20,6 +20,7 @@ class Board(object):
         super(Board, self).__init__()
         self.width = width
         self.height = height
+        self.tries = 0
         self.cells = {} # A dictionary of tuples, for each will be a list of values
         # Defines each cell in self.cells
         for x in range(width):
@@ -89,3 +90,18 @@ class Board(object):
     def show_board(self):
         self.screen.blit(self.background, (0, 0))
         pygame.display.flip()
+
+    def inorderSearch(self):
+        found_goal = False
+        while found_goal == False:
+            for x in range(self.width):
+                for y in range(self.height):
+                    # print(self.tries)
+                    self.tries += 1
+                    roll = random.random()
+                    if roll <= self.cells[(x, y)]['prob']:
+                        if self.cells[(x, y)]['is_goal'] == True:
+                            print('ayy')
+                            found_goal = True
+                            break
+        print(self.tries)
