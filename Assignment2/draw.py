@@ -2,14 +2,14 @@ import sys
 import random
 import pygame as pygame
 
-cell_size = 100
+cell_size = 15
 
 # Terrain
 white =         (255, 255, 255)
-light_gray =    (179, 255, 179) #(204, 204, 204)  # Flatland
-green =         (102, 255, 102)#(0, 153, 51)  # Hilly
-dark_green =    (26, 255, 26)#(0, 51, 0)  # Forested
-gray =          (0, 204, 0)#(153, 153, 153)  # Caves
+light_gray =    (204, 204, 204)  # Flatland
+green =         (0, 153, 51)  # Hilly
+dark_green =    (0, 51, 0)  # Forested
+gray =          (153, 153, 153)  # Caves
 light_green =   (153, 255, 153)  # Start
 red =           (255, 0, 0)  # Goal
 black =         (0, 0, 0)
@@ -18,10 +18,13 @@ class Board(object):
     """docstring for Board."""
     def __init__(self, width, height):
         super(Board, self).__init__()
+        self.x = 0
+        self.y = 0
         self.width = width
         self.height = height
         self.tries = 0
         self.cells = {} # A dictionary of tuples, for each will be a list of values
+        
         # Defines each cell in self.cells
         for x in range(width):
             for y in range(height):
@@ -29,6 +32,7 @@ class Board(object):
                                      'prob': None,      # Probability
                                      'is_goal': False,  # Weather or not it is the goal node
                                      'chance_of_goal': None}    # Keep track of path
+        
         # Sets probabilities for each cell in the board
         for x in range(width):
             for y in range(height):
@@ -45,6 +49,7 @@ class Board(object):
                 elif p <= 1.0:
                     self.cells[(x, y)]['state'] = 'Caves'
                     self.cells[(x, y)]['prob'] = 0.1
+
         # Picks a random (n,m) to be the Goal
         self.n = int(width * random.random())
         self.m = int(height * random.random())
@@ -52,6 +57,15 @@ class Board(object):
             for y in range(height):
                 if x == self.n and y == self.m:
                     self.cells[(x, y)]['is_goal'] = True
+        
+        # Creates probability matrix w/ initial values
+        self.prob_max = 1.0/(width*height)
+        self.prob_prev = 0.0
+        self.prob = [[0 for x in range(width)] for y in range(height)]
+        for x in range(width):
+            for y in range(height):
+                self.prob[x][y] = 1.0/(width*height)
+
         # Pygame setup
         pygame.init()
         self.size = width, height = (cell_size * width) + 2, (cell_size * height) + 2
@@ -71,9 +85,9 @@ class Board(object):
         # Assigns color to cell depending on terrain type given
         for x in range(self.width):
             for y in range(self.height):
-                top = (x * cell_size) + 2
-                left = (y * cell_size) + 2
-                r = pygame.Rect(left, top, cell_size - 2, cell_size - 2)
+                top = (x * cell_size) + 1
+                left = (y * cell_size) + 1
+                r = pygame.Rect(left, top, cell_size - 1, cell_size - 1)
                 if self.cells[(x, y)]['is_goal']:
                     pygame.draw.rect(self.background, red, r, 0)
                 elif self.cells[(x, y)]['state'] == 'Flat':
@@ -85,11 +99,20 @@ class Board(object):
                 elif self.cells[(x, y)]['state'] == 'Caves':
                     pygame.draw.rect(self.background, gray, r, 0)
 
-
     # Refresh function
     def show_board(self):
         self.screen.blit(self.background, (0, 0))
         pygame.display.flip()
+        running = True
+        try:
+            while running:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        running = False
+            pygame.quit()
+        except SystemExit:
+            pygame.quit()
+
 
     def inorderSearch(self):
         found_goal = False
@@ -105,3 +128,36 @@ class Board(object):
                             found_goal = True
                             break
         print(self.tries)
+
+    def normalize(self, x, y):
+        scalar = (1.0-self.prob[x][y])/(1.0-self.prob_prev)
+        self.prob_max = 0.0
+        for i in range(self.width):
+            for j in range(self.height):
+                self.prob[i][j] = scalar*self.prob[i][j]
+                if(self.prob[i][j] > self.prob_max):
+                    self.prob_max = self.prob[i][j]
+                    self.x = i
+                    self.y = j
+                #self.show_board()
+
+
+    def baye_1(self):
+        x = int (random.random() * self.width)
+        y = int (random.random() * self.height)
+        found_goal = False
+        while found_goal == False:
+            self.tries += 1
+            roll = random.random()
+            if (roll <= self.cells[(x, y)]['prob']) and (self.cells[(x, y)]['is_goal'] == True):
+                print('ayy')
+                print(self.cells[(x, y)]['state'] +": " + str(self.cells[(x, y)]['prob']))
+                found_goal = True
+                break
+            else:
+                self.prob_prev = self.prob[x][y]
+                self.prob[x][y] = self.prob[x][y]*(1-self.cells[(x, y)]['prob'])/((self.prob[x][y]*(1-self.cells[(x, y)]['prob']))+(1-self.prob[x][y])) # Bayes' Theorum, with the denom expanded
+                self.normalize(x, y)
+                x = self.x
+                y = self.y 
+                print(str(self.tries) + ": " + str(self.prob_max))
