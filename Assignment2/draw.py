@@ -13,6 +13,7 @@ gray =          (153, 153, 153)  # Caves
 light_green =   (153, 255, 153)  # Start
 red =           (255, 0, 0)  # Goal
 black =         (0, 0, 0)
+blue =          (0, 0, 200)
 
 class Board(object):
     """docstring for Board."""
@@ -57,15 +58,6 @@ class Board(object):
             for y in range(height):
                 if x == self.n and y == self.m:
                     self.cells[(x, y)]['is_goal'] = True
-        
-        # Creates probability matrix w/ initial values
-        self.prob_max = 1.0/(width*height)
-        self.prob_prev = 0.0
-        self.prob = [[0 for x in range(width)] for y in range(height)]
-        for x in range(width):
-            for y in range(height):
-                self.prob[x][y] = 1.0/(width*height)
-
         # Pygame setup
         pygame.init()
         self.size = width, height = (cell_size * width) + 2, (cell_size * height) + 2
@@ -105,16 +97,25 @@ class Board(object):
         pygame.display.flip()
         running = True
         try:
-            while running:
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        running = False
-            pygame.quit()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
         except SystemExit:
             pygame.quit()
 
+    # Creates probability matrix w/ initial values
+    def init_prob(self):
+        self.prob_max = 1.0/(self.width*self.height)
+        self.prob_prev = 0.0
+        self.prob = [[0 for x in range(self.width)] for y in range(self.height)]
+        for x in range(self.width):
+            for y in range(self.height):
+                self.prob[x][y] = 1.0/(self.width*self.height)
+
+    
 
     def inorderSearch(self):
+        self.tries = 0
         found_goal = False
         while found_goal == False:
             for x in range(self.width):
@@ -128,6 +129,28 @@ class Board(object):
                             found_goal = True
                             break
         print(self.tries)
+
+    def update_current(self, i, j):
+        for x in range(self.width):
+            for y in range(self.height):
+                top = (x * cell_size) + 1
+                left = (y * cell_size) + 1
+                r = pygame.Rect(left, top, cell_size - 1, cell_size - 1)
+                if self.cells[(x, y)]['is_goal']:
+                    pygame.draw.rect(self.background, red, r, 0)
+                elif self.cells[(x, y)]['state'] == 'Flat':
+                    pygame.draw.rect(self.background, light_gray, r, 0)
+                elif self.cells[(x, y)]['state'] == 'Hilly':
+                    pygame.draw.rect(self.background, light_green, r, 0)
+                elif self.cells[(x, y)]['state'] == 'Forest':
+                    pygame.draw.rect(self.background, dark_green, r, 0)
+                elif self.cells[(x, y)]['state'] == 'Caves':
+                    pygame.draw.rect(self.background, gray, r, 0)
+        top = (i * cell_size) + 1
+        left = (j * cell_size) + 1
+        r = pygame.Rect(left, top, cell_size - 1, cell_size - 1)
+        pygame.draw.rect(self.background, blue, r, 0)
+
 
     def normalize(self, x, y):
         scalar = (1.0-self.prob[x][y])/(1.0-self.prob_prev)
@@ -143,10 +166,14 @@ class Board(object):
 
 
     def baye_1(self):
+        self.tries = 0
+        self.init_prob()
         x = int (random.random() * self.width)
         y = int (random.random() * self.height)
         found_goal = False
         while found_goal == False:
+            # self.update_current(x, y)
+            self.show_board()
             self.tries += 1
             roll = random.random()
             if (roll <= self.cells[(x, y)]['prob']) and (self.cells[(x, y)]['is_goal'] == True):
@@ -156,8 +183,39 @@ class Board(object):
                 break
             else:
                 self.prob_prev = self.prob[x][y]
-                self.prob[x][y] = self.prob[x][y]*(1-self.cells[(x, y)]['prob'])/((self.prob[x][y]*(1-self.cells[(x, y)]['prob']))+(1-self.prob[x][y])) # Bayes' Theorum, with the denom expanded
+                self.prob[x][y] = self.prob[x][y]*((1-self.cells[(x, y)]['prob'])/(1-self.prob[x][y]))  # Bayes' Theorem
+                # self.prob[x][y] = self.prob[x][y]*(1-self.cells[(x, y)]['prob'])/((self.prob[x][y]*(1-self.cells[(x, y)]['prob']))+(1-self.prob[x][y])) # Bayes' Theorem, with the denom expanded     
+                # UNCOMMENT ABOVE IF YOU WANT TO BE A LITTLE MORE CORRECT... (TIME CONSUMING)
                 self.normalize(x, y)
                 x = self.x
                 y = self.y 
-                print(str(self.tries) + ": " + str(self.prob_max))
+                # print(str(self.tries) + ": " + str(self.prob_max))
+        print(self.tries)
+
+    def baye_2(self):
+        self.tries = 0
+        self.init_prob()
+        x = int (random.random() * self.width)
+        y = int (random.random() * self.height)
+        found_goal = False
+        while found_goal == False:
+            # self.update_current(x, y)
+            self.show_board()
+            self.tries += 1
+            roll = random.random()
+            if (roll <= self.cells[(x, y)]['prob']) and (self.cells[(x, y)]['is_goal'] == True):
+                print('ayy')
+                print(self.cells[(x, y)]['state'] +": " + str(self.cells[(x, y)]['prob']))
+                found_goal = True
+                break
+            else:
+                self.prob_prev = self.prob[x][y]
+                self.prob[x][y] = self.prob[x][y]*((1-self.cells[(x, y)]['prob'])/(1-self.prob[x][y]))  # Bayes' Theorem
+                # self.prob[x][y] = self.prob[x][y]*(1-self.cells[(x, y)]['prob'])/((self.prob[x][y]*(1-self.cells[(x, y)]['prob']))+(1-self.prob[x][y])) # Bayes' Theorem, with the denom expanded
+                # UNCOMMENT ABOVE IF YOU WANT TO BE A LITTLE MORE CORRECT... (TIME CONSUMING)
+                self.prob[x][y] = self.prob[x][y] * self.cells[(x, y)]['prob']  # Here, we scale the probability by the cell's likelihood of finding the goal, thereby prioritizing environments where finding the target is more likely
+                self.normalize(x, y)
+                x = self.x
+                y = self.y 
+                # print(str(self.tries) + ": " + str(self.prob_max))
+        print(self.tries)
