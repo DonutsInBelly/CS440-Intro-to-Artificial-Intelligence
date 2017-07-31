@@ -13,12 +13,13 @@ y = 0
 # board.baye_2()
 # board.rule1()
 total = 0
-for i in range(15):
-	cur = board.rule1()
+for i in range(100):
+	cur = board.rule2()
 	total += cur
-	board = draw.Board(50,50)
+	board.changeGoal()
+	board.show_board()
 
-avg = total / float(15)
+avg = total / float(100)
 print("Final Average = " + str(avg))
 # while True:
 # 	board.show_board()

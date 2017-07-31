@@ -104,6 +104,12 @@ class Board(object):
         except SystemExit:
             pygame.quit()
 
+    def changeGoal(self):
+        self.cells[(self.n, self.m)]['is_goal'] = False
+        self.n = int(self.width * random.random())
+        self.m = int(self.height * random.random())
+        self.cells[(self.n, self.m)]['is_goal'] = True
+
     # Creates probability matrix w/ initial values
     def init_prob(self):
         self.prob_max = 1.0/(self.width*self.height)
@@ -162,6 +168,51 @@ class Board(object):
                         belief[(x,y)] = np.float64(curBt)/((checkedBt * checkedProb) + (1 - checkedBt))
                         # belief[(x,y)] = np.float64(curBt)/((belief[(x,y)] * self.cells[(x,y)]['prob']) + (1 - checkedBt))
                     # print("New Belief of (" + str(x) + ", " + str(y) + "): " + str(belief[(x,y)]))
+            for x in range(self.width):
+                for y in range(self.height):
+                    if belief[(newx, newy)] < belief[(x,y)]:
+                        # print("New x and y")
+                        newx = x
+                        newy = y
+            # print(belief)
+            curx = newx
+            cury = newy
+        print("Finished with : " + str(tries))
+        return tries
+
+    def rule2(self):
+        belief = {}
+        # Initialize belief states
+        for x in range(self.width):
+            for y in range(self.height):
+                belief[(x,y)] = (float(1)/(self.width * self.height)) #* (1 - self.cells[(x,y)]['prob'])
+                # belief[(x, y)] = random.random()
+        # Start Search
+        tries = 0
+        found_goal = False
+        curx = 0
+        cury = 0
+        while found_goal == False:
+            # Search cell
+            tries += 1
+            roll = random.random()
+            checkedBt = belief[(x, y)]
+            checkedProb = self.cells[(curx, cury)]['prob']
+            print("Try: " + str(tries) + ", Checking " + str(curx) + ", " + str(cury) + " with probability: " + str(belief[curx,cury]) + "; Goal at: (" + str(self.n) + ", " + str(self.m) + ")")
+            # print(tries)
+            if roll <= checkedProb:
+                if self.cells[(curx, cury)]['is_goal']:
+                    found_goal = True
+                    break
+            # Update belief states and pick new curx and cury
+            newx = 0
+            newy = 0
+            # curBt = belief[(0,0)]
+            # belief[(0,0)] = np.float64(1 - self.cells[(x,y)]['prob']) * curBt
+            belief[(curx,cury)] = np.float64(1 - self.cells[(curx,cury)]['prob']) * (belief[(curx,cury)])
+            # for x in range(self.width):
+            #     for y in range(self.height):
+
             for x in range(self.width):
                 for y in range(self.height):
                     if belief[(newx, newy)] < belief[(x,y)]:
