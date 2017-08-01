@@ -260,10 +260,7 @@ class Board(object):
 
         -Nick
 
-        P.S.    rule1 average: 9845.38
-                rule2 average: 5076.0
-
-        P.P.S.  this is a jank-fest, I'm sorry
+        P.S.  this is a jank-fest, I'm sorry
     """
 
     def num_4(self):
