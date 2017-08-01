@@ -276,8 +276,8 @@ class Board(object):
         total_cost = 0
         step_cost = 0
         found_goal = False
-        curx = int(random.random())
-        cury = int(random.random())
+        curx = int(random.random()*self.width)
+        cury = int(random.random()*self.height)
         mcex = 0
         mcey = 0
         steps = 0
@@ -290,7 +290,7 @@ class Board(object):
             for x in range(self.width):
                 for y in range(self.height):
                     step_cost = 1 + abs(x - curx) + math.fabs(y - cury)
-                    cost_effect[(x, y)] = belief[(x, y)]/step_cost
+                    cost_effect[(x, y)] = np.float64(belief[(x, y)])/step_cost
                     if cost_effect[(x, y)] > most_cost_effect:
                         most_cost_effect = cost_effect[(x, y)]
                         mcex = x
@@ -307,7 +307,7 @@ class Board(object):
 
             # Search and update probability matrix
             roll = random.random()
-            checkedBt = belief[(x, y)]
+            checkedBt = belief[(curx, cury)]
             checkedProb = self.cells[(curx, cury)]['prob']
             print("Try: " + str(tries) + ", Cost: " + str(steps) +", Checking " + str(curx) + ", " + str(cury) + " with probability: " + str(belief[curx,cury]) + "; \t Goal at: (" + str(self.n) + ", " + str(self.m) + ")")
             # print(tries)
@@ -315,22 +315,22 @@ class Board(object):
                 if self.cells[(curx, cury)]['is_goal']:
                     found_goal = True
                     break
-            # Update belief states and pick new curx and cury
-            newx = 0
-            newy = 0
-            # curBt = belief[(0,0)]
-            # belief[(0,0)] = np.float64(1 - self.cells[(x,y)]['prob']) * curBt
-            belief[(curx,cury)] = np.float64(1 - self.cells[(curx,cury)]['prob']) * (belief[(curx,cury)])
+            # Uncomment for Rule 2
+            # belief[(curx,cury)] = np.float64(1 - self.cells[(curx,cury)]['prob']) * (belief[(curx,cury)])
+           
+            # Uncomment for Rule 1
+            prev_prob = belief[(curx, cury)]
+            curr_prob = belief[(curx, cury)] * (1-self.cells[(curx, cury)]['prob'])/(1-belief[(curx, cury)])
+            scalar = (1-curr_prob)/(1-prev_prob)
+            for x in range(self.width):
+                for y in range(self.height):
+                    if(x == curx and y == cury):
+                        belief[(x, y)] = curr_prob
+                    else:
+                        belief[(x, y)] = belief[(x, y)] * scalar
 
         print("Finished with : " + str(steps))
-        return steps
-
-
-
-
-
-        print("Finished with : " + str(tries))
-        return tries
+        return (tries, steps)
 
 
 
@@ -403,7 +403,7 @@ class Board(object):
         y = int (random.random() * self.height)
         found_goal = False
         while found_goal == False:
-            # self.update_current(x, y)
+            self.update_current(x, y)
             self.show_board()
             self.tries += 1
             roll = random.random()
