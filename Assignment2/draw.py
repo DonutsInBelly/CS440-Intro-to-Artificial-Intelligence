@@ -148,10 +148,10 @@ class Board(object):
             newy = 0
             curBt = belief[(0,0)]
             if self.cells[(0,0)]['is_goal']:
-                belief[(0,0)] = np.float64(checkedBt * checkedProb)/((checkedBt * checkedProb) + (1 - checkedBt))
+                belief[(0,0)] = np.float64(checkedBt * checkedProb)/((curBt * checkedProb) + (1 - checkedBt))
                 # belief[(0,0)] = np.float64(checkedBt * checkedProb)/((belief[(0,0)] * self.cells[(0,0)]['prob']) + (1 - checkedBt))
             else:
-                belief[(0,0)] = np.float64(curBt)/((checkedBt * checkedProb) + (1 - checkedBt))
+                belief[(0,0)] = np.float64(curBt)/((curBt * checkedProb) + (1 - checkedBt))
                 # belief[(0,0)] = np.float64(curBt)/((belief[(0,0)] * self.cells[(0,0)]['prob']) + (1 - checkedBt))
             for x in range(self.width):
                 for y in range(self.height):
