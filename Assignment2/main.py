@@ -14,7 +14,7 @@ y = 0
 # board.rule1()
 total = 0
 for i in range(100):
-	cur = board.rule2()
+	cur = board.num_4()
 	total += cur
 	board.changeGoal()
 	board.show_board()
