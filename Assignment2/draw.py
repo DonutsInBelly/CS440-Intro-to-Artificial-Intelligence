@@ -1,4 +1,5 @@
 import sys
+import math
 import random
 import pygame as pygame
 import numpy as np
@@ -81,9 +82,7 @@ class Board(object):
                 top = (x * cell_size) + 1
                 left = (y * cell_size) + 1
                 r = pygame.Rect(left, top, cell_size - 1, cell_size - 1)
-                if self.cells[(x, y)]['is_goal']:
-                    pygame.draw.rect(self.background, red, r, 0)
-                elif self.cells[(x, y)]['state'] == 'Flat':
+                if self.cells[(x, y)]['state'] == 'Flat':
                     pygame.draw.rect(self.background, light_gray, r, 0)
                 elif self.cells[(x, y)]['state'] == 'Hilly':
                     pygame.draw.rect(self.background, light_green, r, 0)
@@ -91,6 +90,8 @@ class Board(object):
                     pygame.draw.rect(self.background, dark_green, r, 0)
                 elif self.cells[(x, y)]['state'] == 'Caves':
                     pygame.draw.rect(self.background, gray, r, 0)
+                if self.cells[(x, y)]['is_goal']:
+                    pygame.draw.rect(self.background, red, r, 2)
 
     # Refresh function
     def show_board(self):
@@ -241,6 +242,101 @@ class Board(object):
                             break
         print(self.tries)
 
+
+    """ 
+        This function creates a "cost-effectiveness" matrix that is informed by the probability matrix...
+        
+        Given the current cell and the values of the probability matrix, this function creates "cost-effective"
+        estimations by dividing the probability matrix value of a cell by the distance that cell is from the 
+        current cell (...+1, adding 'the search cost'). The program will then "step" to the cell with the highest 
+        "cost effective" number. 
+
+        The logic here being that if search and step costs are the same, it is worth visiting a cell that is
+        greater than "the step cost" times more likely to have the current node.
+
+        In the event of a tie, the closer cells are prioritized.
+
+        If this is dumb, lmk
+
+        -Nick
+
+        P.S.    rule1 average: 9845.38
+                rule2 average: 5076.0
+
+        P.P.S.  this is a jank-fest, I'm sorry
+    """
+
+    def num_4(self):
+        cost_effect = {}
+        belief = {}
+        # Initialize belief states
+        for x in range(self.width):
+            for y in range(self.height):
+                belief[(x,y)] = (float(1)/(self.width * self.height)) #* (1 - self.cells[(x,y)]['prob'])
+                # belief[(x, y)] = random.random()
+        # Start Search
+        tries = 0
+        total_cost = 0
+        step_cost = 0
+        found_goal = False
+        curx = int(random.random())
+        cury = int(random.random())
+        mcex = 0
+        mcey = 0
+        steps = 0
+        mce_step_cost = 0
+
+        while found_goal == False:
+            # Update cost-effectiveness matrix
+            most_cost_effect = 0
+            step_cost = 0
+            for x in range(self.width):
+                for y in range(self.height):
+                    step_cost = 1 + abs(x - curx) + math.fabs(y - cury)
+                    cost_effect[(x, y)] = belief[(x, y)]/step_cost
+                    if cost_effect[(x, y)] > most_cost_effect:
+                        most_cost_effect = cost_effect[(x, y)]
+                        mcex = x
+                        mcey = y
+                        mce_step_cost = step_cost
+                    elif ((cost_effect[(x, y)] == most_cost_effect) and (step_cost < mce_step_cost)):
+                        mcex = x
+                        mcey = y
+                        mce_step_cost = step_cost
+            curx = mcex
+            cury = mcey
+            steps += mce_step_cost
+            tries += 1
+
+            # Search and update probability matrix
+            roll = random.random()
+            checkedBt = belief[(x, y)]
+            checkedProb = self.cells[(curx, cury)]['prob']
+            print("Try: " + str(tries) + ", Cost: " + str(steps) +", Checking " + str(curx) + ", " + str(cury) + " with probability: " + str(belief[curx,cury]) + "; \t Goal at: (" + str(self.n) + ", " + str(self.m) + ")")
+            # print(tries)
+            if roll <= checkedProb:
+                if self.cells[(curx, cury)]['is_goal']:
+                    found_goal = True
+                    break
+            # Update belief states and pick new curx and cury
+            newx = 0
+            newy = 0
+            # curBt = belief[(0,0)]
+            # belief[(0,0)] = np.float64(1 - self.cells[(x,y)]['prob']) * curBt
+            belief[(curx,cury)] = np.float64(1 - self.cells[(curx,cury)]['prob']) * (belief[(curx,cury)])
+
+        print("Finished with : " + str(steps))
+        return steps
+
+
+
+
+
+        print("Finished with : " + str(tries))
+        return tries
+
+
+
     def update_current(self, i, j):
         for x in range(self.width):
             for y in range(self.height):
@@ -277,7 +373,7 @@ class Board(object):
 
 
     def baye_1(self):
-        self.tries = 0
+        tries = 0
         self.init_prob()
         x = int (random.random() * self.width)
         y = int (random.random() * self.height)
@@ -286,25 +382,25 @@ class Board(object):
             # self.update_current(x, y)
             self.show_board()
             self.tries += 1
-            roll = random.random()
-            if (roll <= self.cells[(x, y)]['prob']) and (self.cells[(x, y)]['is_goal'] == True):
+            roll = np.float64(random.random())
+            if (roll >= self.cells[(x, y)]['prob']) and (self.cells[(x, y)]['is_goal'] == True):
                 print('ayy')
                 print(self.cells[(x, y)]['state'] +": " + str(self.cells[(x, y)]['prob']))
                 found_goal = True
                 break
             else:
                 self.prob_prev = self.prob[x][y]
-                self.prob[x][y] = self.prob[x][y]*((1-self.cells[(x, y)]['prob'])/(1-self.prob[x][y]))  # Bayes' Theorem
+                self.prob[x][y] = self.prob[x][y]*((self.cells[(x, y)]['prob'])/(1-self.prob[x][y]))  # Bayes' Theorem
                 # self.prob[x][y] = self.prob[x][y]*(1-self.cells[(x, y)]['prob'])/((self.prob[x][y]*(1-self.cells[(x, y)]['prob']))+(1-self.prob[x][y])) # Bayes' Theorem, with the denom expanded
                 # UNCOMMENT ABOVE IF YOU WANT TO BE A LITTLE MORE CORRECT... (TIME CONSUMING)
                 self.normalize(x, y)
                 x = self.x
                 y = self.y
-                # print(str(self.tries) + ": " + str(self.prob_max))
-        print(self.tries)
+                print(str(self.tries) + ": " + str(self.prob_max))
+        return(tries)
 
     def baye_2(self):
-        self.tries = 0
+        tries = 0
         self.init_prob()
         x = int (random.random() * self.width)
         y = int (random.random() * self.height)
@@ -329,4 +425,4 @@ class Board(object):
                 x = self.x
                 y = self.y
                 # print(str(self.tries) + ": " + str(self.prob_max))
-        print(self.tries)
+        return(tries)
