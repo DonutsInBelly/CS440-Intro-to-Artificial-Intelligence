@@ -18,7 +18,7 @@ total_steps = 0
 
 for i in range(100):
 	(cur_tires, cur_steps) = board.num_4()
-	total_tries += cur_tires
+	total_tries += cur_tries
 	total_steps += cur_steps
 	board.changeGoal()
 	board.show_board()
