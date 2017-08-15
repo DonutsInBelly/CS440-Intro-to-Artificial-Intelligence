@@ -1,23 +1,21 @@
 #!/usr/bin/python3
 
+import network
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
-def rgb2gray(rgb):
-    gray = np.ndarray((len(rgb),len(rgb[0])))
-    for x in range(len(rgb)):
-        for y in range(len(rgb[x])):
-            gray[(x,y)] = int((rgb[(x,y,0)] * 0.21) + (rgb[(x,y,1)] * 0.72) + (rgb[(x,y,2)] * 0.07))
-            print(gray[(x,y)])
-    return gray
-
+nn = network.NeuralNetwork()
 img = mpimg.imread('profile.jpg')
-gray = rgb2gray(img)
-model = {}
-newColor = 0
-seenColor = 0
+newgray = mpimg.imread('image123.jpg')
+# print(img[0])
 
-plt.gray()
-plt.imshow(gray)
+gray = nn.train(img)
+
+# plt.imshow(gray, cmap='gray')
+# plt.show()
+
+newimg = nn.colorize(newgray)
+
+plt.imshow(newimg)
 plt.show()
