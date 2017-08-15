@@ -69,34 +69,44 @@ class NeuralNetwork(object):
             for col in range(1, self.width, 3):
                 self.center[index] = rgbarr[(row,col)]
                 index += 1
-                print("Checking pixel ("+str(row)+","+str(col)+")")
+                print("Retreiving center pixel RGB value at ("+str(row)+","+str(col)+")")
 
         # Initialize random weight vectors
-        self.alpha = 0.001
+        self.alpha = 0.2
         self.weightsR = np.random.random_sample((len(self.patch), 10))
         self.weightsG = np.random.random_sample((len(self.patch), 10))
         self.weightsB = np.random.random_sample((len(self.patch), 10))
         # print(self.weightsG)
 
+        # Scale down 255
+        self.gray255 = np.divide(self.gray9, 255)
         # Train weight sets
-        for updates in range(1):
-            print("Training set: "+str(updates))
+        for updates in range(20):
+            print("Training model, please wait a very long time: "+str(updates))
             # Pick a patch and corresponding center value
             for row in range(len(self.gray9)):
-                real = self.center[row]
-                inputR = np.sum(np.multiply(self.weightsR[row],self.gray9[row]))
-                inputG = np.sum(np.multiply(self.weightsG[row],self.gray9[row]))
-                inputB = np.sum(np.multiply(self.weightsB[row],self.gray9[row]))
+                real = np.divide(self.center[row], 255)
+                # real = self.center[row]
+                '''
+                inputR = np.divide(np.sum(np.multiply(self.weightsR[row],self.gray9[row])), 255)
+                inputG = np.divide(np.sum(np.multiply(self.weightsG[row],self.gray9[row])), 255)
+                inputB = np.divide(np.sum(np.multiply(self.weightsB[row],self.gray9[row])), 255)
+
+                '''
+                inputR = np.sum(np.multiply(self.weightsR[row],self.gray255[row]))
+                inputG = np.sum(np.multiply(self.weightsG[row],self.gray255[row]))
+                inputB = np.sum(np.multiply(self.weightsB[row],self.gray255[row]))
+
                 outputR = sigmoid(inputR)
                 outputG = sigmoid(inputG)
                 outputB = sigmoid(inputB)
                 # print(outputR)
                 # Update weights
                 for col in range(len(self.gray9[row])):
-                    self.weightsR[(row,col)] = self.weightsR[(row,col)] - self.alpha*(2*(outputR - real[0])*sigmoid(inputR,deriv=True)*self.gray9[(row,col)])
-                    self.weightsG[(row,col)] = self.weightsG[(row,col)] - self.alpha*(2*(outputG - real[1])*sigmoid(inputG,deriv=True)*self.gray9[(row,col)])
-                    self.weightsB[(row,col)] = self.weightsB[(row,col)] - self.alpha*(2*(outputB - real[2])*sigmoid(inputB,deriv=True)*self.gray9[(row,col)])
-        print(self.weightsR)
+                    self.weightsR[(row,col)] = self.weightsR[(row,col)] - self.alpha*(2*(outputR - real[0])*sigmoid(inputR,deriv=True)*self.gray255[(row,col)])
+                    self.weightsG[(row,col)] = self.weightsG[(row,col)] - self.alpha*(2*(outputG - real[1])*sigmoid(inputG,deriv=True)*self.gray255[(row,col)])
+                    self.weightsB[(row,col)] = self.weightsB[(row,col)] - self.alpha*(2*(outputB - real[2])*sigmoid(inputB,deriv=True)*self.gray255[(row,col)])
+        # print(self.weightsR)
         return gray
 
     def colorize(self, img):
@@ -104,6 +114,7 @@ class NeuralNetwork(object):
         for row in range(len(img)):
             for col in range(len(img[row])):
                 gray[(row,col)] = img[(row,col,0)]
+
                 # print(img[(row,col,0)])
 
         # Build vectors to compare
@@ -122,15 +133,18 @@ class NeuralNetwork(object):
             for index2 in range(len(self.gray9)):
                 if np.allclose(vectors[index], self.gray9[index2], rtol=diff):
                     # Found a good match
-                    R = np.sum(np.multiply(vectors[index], self.weightsR))
-                    G = np.sum(np.multiply(vectors[index], self.weightsG))
-                    B = np.sum(np.multiply(vectors[index], self.weightsB))
+                    R = np.sum(np.multiply(vectors[index], self.weightsR[index2]))
+                    G = np.sum(np.multiply(vectors[index], self.weightsG[index2]))
+                    B = np.sum(np.multiply(vectors[index], self.weightsB[index2]))
                     # value = np.array([R,G,B])
                     value = self.center[index2]
-                    print(value)
+                    print("Setting patch color[" + str(index) + " of " + str(len(vectors)) + "]: " + str(value))
                     vallist.append(value)
                     break
 
+        if len(vallist) < len(vectors):
+            print("Could not find colors close to the vectors")
+            return
         count = 0
         for row in range(1, len(img), 3):
             for col in range(1, len(img[row]), 3):

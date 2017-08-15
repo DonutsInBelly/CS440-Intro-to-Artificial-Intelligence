@@ -11,6 +11,7 @@ print(picture)
 
 # picture.flatten()
 # for i in range(len(picture)):
-
+print(len(picture))
+print(len(picture[0]))
 plt.imshow(picture)
 plt.show()
