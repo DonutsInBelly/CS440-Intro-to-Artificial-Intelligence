@@ -127,7 +127,7 @@ class NeuralNetwork(object):
                     B = np.sum(np.multiply(vectors[index], self.weightsB))
                     # value = np.array([R,G,B])
                     value = self.center[index2]
-                    # print(value)
+                    print(value)
                     vallist.append(value)
                     break
 
