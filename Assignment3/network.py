@@ -1,7 +1,7 @@
 import numpy as np
 
 # sigmoid function
-def nonlin(x,deriv=False):
+def sigmoid(x,deriv=False):
     if(deriv==True):
         return x*(1-x)
     return 1.0/(1+np.exp(-x))
@@ -87,16 +87,16 @@ class NeuralNetwork(object):
                 inputR = np.sum(np.multiply(self.weightsR[row],self.gray9[row]))
                 inputG = np.sum(np.multiply(self.weightsG[row],self.gray9[row]))
                 inputB = np.sum(np.multiply(self.weightsB[row],self.gray9[row]))
-                outputR = nonlin(inputR)
-                outputG = nonlin(inputG)
-                outputB = nonlin(inputB)
+                outputR = sigmoid(inputR)
+                outputG = sigmoid(inputG)
+                outputB = sigmoid(inputB)
                 # print(outputR)
                 # Update weights
                 for col in range(len(self.gray9[row])):
-                    self.weightsR[(row,col)] = self.weightsR[(row,col)] - self.alpha*(2*(real[0] - outputR)*nonlin(inputR,deriv=True)*self.gray9[(row,col)])
-                    self.weightsG[(row,col)] = self.weightsG[(row,col)] - self.alpha*(2*(real[1] - outputG)*nonlin(inputG,deriv=True)*self.gray9[(row,col)])
-                    self.weightsB[(row,col)] = self.weightsB[(row,col)] - self.alpha*(2*(real[2] - outputB)*nonlin(inputB,deriv=True)*self.gray9[(row,col)])
-        # print(self.weightsR)
+                    self.weightsR[(row,col)] = self.weightsR[(row,col)] - self.alpha*(2*(outputR - real[0])*sigmoid(inputR,deriv=True)*self.gray9[(row,col)])
+                    self.weightsG[(row,col)] = self.weightsG[(row,col)] - self.alpha*(2*(outputG - real[1])*sigmoid(inputG,deriv=True)*self.gray9[(row,col)])
+                    self.weightsB[(row,col)] = self.weightsB[(row,col)] - self.alpha*(2*(outputB - real[2])*sigmoid(inputB,deriv=True)*self.gray9[(row,col)])
+        print(self.weightsR)
         return gray
 
     def colorize(self, img):
@@ -116,7 +116,7 @@ class NeuralNetwork(object):
             vectors[i] = tmp
 
         # Build color image
-        diff = 0.2
+        diff = 1
         vallist = []
         for index in range(len(vectors)):
             for index2 in range(len(self.gray9)):
@@ -127,7 +127,7 @@ class NeuralNetwork(object):
                     B = np.sum(np.multiply(vectors[index], self.weightsB))
                     # value = np.array([R,G,B])
                     value = self.center[index2]
-                    print(value)
+                    # print(value)
                     vallist.append(value)
                     break
 

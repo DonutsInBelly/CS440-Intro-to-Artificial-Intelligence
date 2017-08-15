@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
 nn = network.NeuralNetwork()
-img = mpimg.imread('profile.jpg')
-newgray = mpimg.imread('image123.jpg')
+img = mpimg.imread('image12.jpg')
+newgray = mpimg.imread('image12gray.jpg')
 # print(img[0])
 
 gray = nn.train(img)
