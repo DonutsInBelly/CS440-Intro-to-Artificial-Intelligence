@@ -109,6 +109,45 @@ class NeuralNetwork(object):
         # print(self.weightsR)
         return gray
 
+    def inputarr(self, inputa, center):
+        self.center = center
+        self.gray9 = np.empty([len(inputa), 10])
+        # Build vectors to make linear combinations easier
+        for i in range(len(inputa)):
+            tmp = inputa[i]
+            tmp = tmp.flatten()
+            tmp = np.append(tmp, 1)
+            self.gray9[i] = tmp
+
+    def colorizeGiven(self, img,inputa):
+        vectors = np.empty([len(img),10])
+        for i in range(len(img)):
+            tmp = img[i]
+            tmp = tmp.flatten()
+            tmp = np.append(tmp, 1)
+            vectors[i] = tmp
+        # Build color image
+        diff = 0.5
+        vallist = []
+        for index in range(len(vectors)):
+            for index2 in range(len(self.gray9)):
+                if np.allclose(vectors[index], self.gray9[index2], rtol=diff):
+                    # Found a good match
+                    # value = np.array([R,G,B])
+                    value = self.center[index2]
+                    print("Setting patch color[" + str(index) + " of " + str(len(vectors)) + "]: " + str(value))
+                    vallist.append(value)
+                    break
+
+        if len(vallist) < len(vectors):
+            print("Could not find colors close to the vectors")
+            return
+        count = 0
+        img = np.empty([len(img, 3)])
+        for row in range(1, len(img), 3):
+            img[(row,col)] = vallist[count]
+        return img
+
     def colorize(self, img):
         gray = np.ndarray((len(img),len(img[0])))
         for row in range(len(img)):
