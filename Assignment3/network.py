@@ -143,8 +143,8 @@ class NeuralNetwork(object):
             print("Could not find colors close to the vectors")
             return
         count = 0
-        img = np.empty([len(img, 3)])
-        for row in range(1, len(img), 3):
+        img = np.ndarray((len(img), 3))
+        for row in range(len(img)):
             img[(row,col)] = vallist[count]
         return img
 
